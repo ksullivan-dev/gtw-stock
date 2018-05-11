@@ -1,0 +1,37 @@
+{
+    "name": "Q-SKU",
+    "description": "Allow adding additional Listing SKU details for each Master SKU through submitted purchase orders",
+    "version": "1.0.0",
+    "icons": {
+        "16": "icon-20.png",
+        "128": "icon-20.png"
+    },
+    "manifest_version": 2,
+    "permissions": [
+        "storage",
+        "webRequest",
+        "*://app.skubana.com/*",
+        "*://da-dev.us/*"
+    ],
+    "background": {
+        "scripts" : ["background.js"],
+        "persistent" : true
+    },
+    "content_scripts" : [
+        {
+            "css" : ["main.css", "libs/css/select2.css"],
+            "matches": ["https://app.skubana.com/work/po*"],
+            "js": [
+                "libs/jquery-3.3.1.min.js",
+                "libs/MutationSummary.js",
+                "libs/select2.js",
+                "bundled-skus.js",
+                "utils.js",
+                "templates.js",
+                "auth.js",
+                "objects.js",
+                "injected.js"
+            ]
+        }
+    ]
+}
