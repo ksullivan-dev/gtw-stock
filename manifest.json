@@ -1,17 +1,16 @@
 {
-    "name": "Q-SKU",
-    "description": "Allow adding additional Listing SKU details for each Master SKU through submitted purchase orders",
-    "version": "1.0.0",
+    "name": "GTW-Stock",
+    "description": "Allowing GTW to view inventory stock for different warehouses",
+    "version": "0.0.1",
     "icons": {
-        "16": "icon-20.png",
-        "128": "icon-20.png"
+        "16": "icon-128.png",
+        "128": "icon-128.png"
     },
     "manifest_version": 2,
     "permissions": [
         "storage",
         "webRequest",
-        "*://app.skubana.com/*",
-        "*://da-dev.us/*"
+        "*://app.skubana.com/*"
     ],
     "background": {
         "scripts" : ["background.js"],
@@ -19,17 +18,12 @@
     },
     "content_scripts" : [
         {
-            "css" : ["main.css", "libs/css/select2.css"],
-            "matches": ["https://app.skubana.com/work/po*"],
+            "css" : ["main.css"],
+            "matches": ["https://app.skubana.com/work/order*"],
             "js": [
                 "libs/jquery-3.3.1.min.js",
-                "libs/MutationSummary.js",
-                "libs/select2.js",
-                "bundled-skus.js",
                 "utils.js",
-                "templates.js",
                 "auth.js",
-                "objects.js",
                 "injected.js"
             ]
         }

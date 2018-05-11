@@ -16,24 +16,20 @@ function checkToken( authToken, response ){
         if( auth ){
             testAuth( auth );
         } else {
-            alert('In order to use this Chrome Extension, you will need the token to access the Skubana API. \n\nThe Manage button is not available.');
+            alert('In order to use this Chrome Extension, you will need the token to access the Skubana API. \n\nInventory Counts will not be available.');
         }
     }
 }
 
 function testAuth( token ){
     $.ajax({
-        url: `https://app.skubana.com/service/v1/listings`,
+        url: `https://app.skubana.com/service/v1/warehouses`,
         headers: {
             'Authorization': `Bearer ${token}`
         },
-        data: {
-            'limit': 1
-        },
         success: function( response ){
             chrome.storage.sync.set({ 'authToken': token });
-            let injectScript = new InjectScript();
-            injectScript.authToken = token;
+            let injectScript = new InjectScript( token, response );
         },
         error: function( response ){
             chrome.storage.sync.remove('authToken');

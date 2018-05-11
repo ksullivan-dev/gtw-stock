@@ -3,18 +3,15 @@ console.log( "*** Background page ***" );
 chrome.webRequest.onCompleted.addListener(
     function( details ){
         if( details && details.statusCode === 200 ){
-            console.log( 'successful request to submitnewpo or cancel' );
+            console.log( 'successful request to load new order' );
             chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-                if( details.url.indexOf( 'submitnewpo' ) > -1 ){
-                    chrome.tabs.sendMessage( tabs[0].id, { newPoSuccess: true } );
-                }
-                if( details.url.indexOf( 'cancel' ) > -1 ){
-                    chrome.tabs.sendMessage( tabs[0].id, { cancelPoSuccess: true } );
+                if( details.url.indexOf( 'getitems' ) > -1 ){
+                    chrome.tabs.sendMessage( tabs[0].id, { newOrderLoaded: true } );
                 }
             });
         }
 
     },
-    {urls: ["*://app.skubana.com/work/po/submitnewpo", "*://app.skubana.com/work/po/cancel"]},
+    {urls: ["*://app.skubana.com/work/orders/getitems*"]},
     []
 );
