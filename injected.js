@@ -12,28 +12,55 @@ class InjectScript {
         chrome.runtime.onMessage.addListener( async request => {
             if( request.newOrderLoaded ){
                 let el = $( '#orderItems span.internalSku' );
-                let skus = Array.from( el ).map( item => $( item ).text() );
-                let warehouseData = await this.getWarehouseDataForSkus( skus, this.authToken, this.warehouses );
-                el.find( '.gtw-popup' ).remove();
-                el.find( '.gtw-icon' ).remove();
-                el.each( (idx, item) => {
+                $( '.gtw-popup' ).remove();
+                $( '.gtw-icon' ).remove();
+                el.each( async (idx, item) => {
+                    let sku = $( item ).text();
+                    let warehouseData = await this.getWarehouseDataForSkus( sku, this.authToken, this.warehouses );
+                    let parent = $( item ).closest( '.orderitem-holder > div:not( .ui-widget-header) > div' );
+                    let allSkus = [ ...new Set(warehouseData.map( item => item.sku ) ) ];
+                    let uniqueSkus = allSkus.filter( data => data !== sku );
                     $( item ).append( '<span class="gtw-icon" />' );
-                    $( item ).append( '<div class="gtw-popup" />' );
+                    parent.append( '<div class="gtw-popup" />' );
                     let template = function(){
-                        let sku = $( item ).text();
-                        let dataToUse = warehouseData.filter( data => data.sku === sku );
-                        let popupStrings = dataToUse.map( data => {
+                        let createRows = data => {
                             return `
-                                <div class="gtw-popup-row">
+                                <div class="gtw-popup-row gtw-popup-row-data">
                                     <span>${ data.locationName }:</span>
                                     <span>${ data.onHand }</span>
                                     <span>${ data.available }</span>
                                     <span>${ data.inTransit }</span>
                                 </div>
                             `;
-                        });
+                        }
+
+                        let sectionRowHeader = ( text, skuString ) => {
+                            return `<div class="gtw-popup-header"><strong>${text}${ skuString}</strong></div>`;
+                        }
+
+                        let masterSkuRowData = warehouseData.filter( data => data.sku === sku);
+                        let masterSkuRows = masterSkuRowData.map( data => createRows( data ) );
+                        let popupStrings = [];
+                        if( masterSkuRows.length ){
+                            popupStrings.push(
+                                sectionRowHeader( 'Master SKU: ', sku ),
+                                masterSkuRows.join('')
+                            );
+                        } else {
+                            popupStrings.push( sectionRowHeader( 'No data for Master SKU: ', sku ) );
+                        }
+                        if( uniqueSkus.length ){
+                            popupStrings.push( sectionRowHeader( 'COMPONENTS', '' ) );
+                            uniqueSkus.forEach( skuID => {
+                                let componentSkuRowData = warehouseData.filter( data => data.sku === skuID );
+                                let componentSkuRow = componentSkuRowData.map( data => createRows( data ))
+                                popupStrings.push(
+                                    sectionRowHeader( 'Component SKU: ', skuID ),
+                                    componentSkuRow.join('') );
+                            });
+                        }
                         return `
-                            <div><strong>Master Sku: ${ sku }</strong></div>
+                            <div><strong>Inventory Details</strong></div>
                             <div class="gtw-popup-row">
                                 <span></span>
                                 <span>On Hand</span>
@@ -43,7 +70,7 @@ class InjectScript {
                             ${ popupStrings.join( '' ) }
                         `;
                     }
-                    $( item ).find( '.gtw-popup' ).html( template() );
+                    parent.find( '.gtw-popup' ).html( template() );
                 });
             }
         });
@@ -54,7 +81,7 @@ class InjectScript {
             data = {
                 url: "https://app.skubana.com/service/v1/inventory",
                 data: {
-                    sku: masters.join( ',' )
+                    sku: masters
                 },
                 headers: {
                     Authorization : "Bearer " + authToken
@@ -64,14 +91,14 @@ class InjectScript {
             let locations = result.map( location => {
                 let locationId = location.stockLocation.warehouseId;
                 let locationName = warehouses.find( warehouse => warehouse.warehouseId === locationId ).name;
-                let sku = masters.find( master => master === location.product.masterSku );
                 return {
-                    locationId   : locationId,
+                    sku          : location.product.masterSku,
                     locationName : locationName + ' (' + location.stockLocation.location + ')',
+                    locationId   : locationId,
                     onHand       : location.warehouseStockTotals.onHandQuantity,
                     available    : location.warehouseStockTotals.availableQuantity,
                     inTransit    : location.warehouseStockTotals.inTransitQuantity,
-                    sku          : sku
+
                 }
             });
             return locations;

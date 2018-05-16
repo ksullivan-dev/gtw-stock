@@ -1,7 +1,7 @@
 {
     "name": "GTW-Stock",
     "description": "Allowing GTW to view inventory stock for different warehouses",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "icons": {
         "16": "icon-128.png",
         "128": "icon-128.png"
