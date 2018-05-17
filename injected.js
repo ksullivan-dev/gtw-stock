@@ -38,7 +38,9 @@ class InjectScript {
                             return `<div class="gtw-popup-header"><strong>${text}${ skuString}</strong></div>`;
                         }
 
-                        let masterSkuRowData = warehouseData.filter( data => data.sku === sku);
+                        let masterSkuRowData = warehouseData.filter( data => {
+                            return data.sku === sku && data.display;
+                        });
                         let masterSkuRows = masterSkuRowData.map( data => createRows( data ) );
                         let popupStrings = [];
                         if( masterSkuRows.length ){
@@ -52,7 +54,9 @@ class InjectScript {
                         if( uniqueSkus.length ){
                             popupStrings.push( sectionRowHeader( 'COMPONENTS', '' ) );
                             uniqueSkus.forEach( skuID => {
-                                let componentSkuRowData = warehouseData.filter( data => data.sku === skuID );
+                                let componentSkuRowData = warehouseData.filter( data => {
+                                    return data.sku === skuID && data.display;
+                                });
                                 let componentSkuRow = componentSkuRowData.map( data => createRows( data ))
                                 popupStrings.push(
                                     sectionRowHeader( 'Component SKU: ', skuID ),
@@ -91,13 +95,23 @@ class InjectScript {
             let locations = result.map( location => {
                 let locationId = location.stockLocation.warehouseId;
                 let locationName = warehouses.find( warehouse => warehouse.warehouseId === locationId ).name;
+                let locationLocation = ' (' + location.stockLocation.location + ')';
+                if( location.stockLocation.location.toLowerCase() === 'global' ){
+                    locationLocation = '';
+                }
+                let stock = location.warehouseStockTotals;
+                let availability = false;
+                if( stock.onHandQuantity > 0 || stock.availableQuantity > 0 || stock.inTransitQuantity > 0 ){
+                    availability = true;
+                }
                 return {
                     sku          : location.product.masterSku,
-                    locationName : locationName + ' (' + location.stockLocation.location + ')',
+                    locationName : locationName + locationLocation,
                     locationId   : locationId,
                     onHand       : location.warehouseStockTotals.onHandQuantity,
                     available    : location.warehouseStockTotals.availableQuantity,
                     inTransit    : location.warehouseStockTotals.inTransitQuantity,
+                    display      : availability
 
                 }
             });
